@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tower.mapper.GsTimeMapper">
+
+	<select id="getGsTime" parameterType="int"
+		resultType="com.tower.common.bean.GsTime">
+
+		select
+		t.id as id,
+		t.gsstarttime as gsstarttime,
+		t.gstime as gstime
+		from Tower_gs_time t
+		where t.towercity=#{towercity}
+		;
+
+	</select>
+	
+	<insert id="insertGsTime" parameterType="com.tower.common.bean.GsTime">
+	 insert into Tower_gs_time
+	 (gsstarttime,gstime,towercity,towerdistrict,towerarea,adminid)
+	 values
+	  (GETDATE(),#{gstime},#{towercity},#{towerdistrict},#{towerarea},#{adminid})
+	  ;
+	</insert>
+	
+	<insert id="updateGsTime" parameterType="com.tower.common.bean.GsTime">
+	 update Tower_gs_time
+	 set 
+	 gsstarttime=GETDATE(),
+	 gstime=#{gstime},
+	 adminid=#{adminid}
+	 where id=#{id}
+	 ;
+	</insert>
+
+
+
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tower.mapper.SettingMapper">
+
+	<update id="updateTowerGs">
+		update tower_setting
+		set content= CONVERT(varchar,
+		GETDATE(), 120 ) 
+		where name='gsstarttime'
+		;
+	</update>
+	
+	<select id="getSettingContent" parameterType="String" resultType="String">
+	  select content
+	  from tower_setting
+	  where 1=1
+	  and name=#{name}
+	 </select>
+
+</mapper>

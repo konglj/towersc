@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tower.mapper.DataTowerMapper">
+
+	<select id="getDataTowers" parameterType="com.tower.common.bean.DataTowerPage"
+		resultType="com.tower.common.bean.DataTower">
+		select * from (select *,ROW_NUMBER() OVER (ORDER BY Tower_add_date
+		desc) as rank from
+		(
+		SELECT a.Tower_name as towername,
+		c.City_name as cityname,
+		b.area_name as areaname,
+		case a.Tower_level when 1 then '一级站址' when 2 then '二级站址' when 3 then
+		'三级站址' when 4 then '四级站址' end as towerlevel,
+		a.Tower_fee as towerfee,
+		d.Cancel_count as cancelcount,
+		d.Reject_count as rejectcount,
+		d.Sale_count as selecount,
+		d.View_count as viewcount,
+		d.Time_count as timecount,
+		a.Tower_add_date,
+		a.Tower_rent_fee as towerrentfee
+		from tower_tower_info a
+		LEFT JOIN tower_area b on a.Tower_area = b.ID
+		LEFT JOIN tower_city c on b.City_id = c.City_id,
+		data_report_tower d
+		where a.ID = d.Tower_id
+		<!-- admin -->
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		 <if test="adminareas!=null">
+	  and b.ID in(
+	  <foreach collection="adminareas" item="area" separator=",">
+	    #{area.id}
+	  </foreach>
+	  ) 
+	  </if>
+		<!-- admin end -->
+		<if test="parameter.towername != null and parameter.towername != ''">
+			and a.Tower_name like '%${parameter.towername}%'
+		</if>
+		<if test="parameter.towercity != null and parameter.towercity != ''">
+			and c.ID = #{parameter.towercity}
+		</if>
+		<if test="parameter.towerarea != null and parameter.towerarea != 0">
+			and a.Tower_area = #{parameter.towerarea}
+		</if>
+		<if test="parameter.towerlevel != null and parameter.towerlevel != -1">
+			and a.Tower_level = #{parameter.towerlevel}
+		</if>
+		) w1)as tm where tm.rank between #{pageNo}*10-9 and #{pageNo}*10
+		;
+	</select>
+
+	<select id="getDataTowersCount" parameterType="com.tower.common.bean.DataTowerPage"
+		resultType="int">
+		select count(1)
+		from tower_tower_info a
+		LEFT JOIN tower_area b on a.Tower_area = b.ID
+		LEFT JOIN tower_city c on b.City_id = c.City_id,
+		data_report_tower d
+		where a.ID = d.Tower_id
+		<!-- admin -->
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		 <if test="adminareas!=null">
+	  and b.ID in(
+	  <foreach collection="adminareas" item="area" separator=",">
+	    #{area.id}
+	  </foreach>
+	  ) 
+	  </if>
+		<!-- admin end -->
+		<if test="parameter.towername != null and parameter.towername != ''">
+			and a.Tower_name like '%${parameter.towername}%'
+		</if>
+		<if test="parameter.towercity != null and parameter.towercity != ''">
+			and c.ID = #{parameter.towercity}
+		</if>
+		<if test="parameter.towerarea != null and parameter.towerarea != 0">
+			and a.Tower_area = #{parameter.towerarea}
+		</if>
+		<if test="parameter.towerlevel != null and parameter.towerlevel != -1">
+			and a.Tower_level = #{parameter.towerlevel}
+		</if>
+		;
+	</select>
+
+
+	<select id="getDcDataTowers" parameterType="com.tower.common.bean.DataTowerPage"
+		resultType="map">
+
+		SELECT a.Tower_name as towername,
+		c.City_name as cityname,
+		b.area_name as areaname,
+		case a.Tower_level when 1 then '一级站址' when 2 then '二级站址' when 3 then
+		'三级站址' when 4 then '四级站址' end as towerlevel,
+		a.Tower_fee as towerfee,
+		d.Cancel_count as cancelcount,
+		d.Reject_count as rejectcount,
+		d.Sale_count as selecount,
+		d.View_count as viewcount,
+		d.Time_count as timecount,
+		a.Tower_add_date,
+		a.Tower_rent_fee as towerrentfee,
+		ss.storename as towerstorename
+		from tower_tower_info a
+		left join tower_tower_store ss on ss.storeid=a.Tower_store
+		LEFT JOIN tower_area b on a.Tower_area = b.ID
+		LEFT JOIN tower_city c on b.City_id = c.City_id,
+		data_report_tower d
+		
+		where a.ID = d.Tower_id
+		<!-- admin -->
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		 <if test="adminareas!=null">
+	  and b.ID in(
+	  <foreach collection="adminareas" item="area" separator=",">
+	    #{area.id}
+	  </foreach>
+	  ) 
+	  </if>
+		<!-- admin end -->
+		<if test="parameter.towername != null and parameter.towername != ''">
+			and a.Tower_name like '%${parameter.towername}%'
+		</if>
+		<if test="parameter.towercity != null and parameter.towercity != ''">
+			and c.ID = #{parameter.towercity}
+		</if>
+		<if test="parameter.towerarea != null and parameter.towerarea != 0">
+			and a.Tower_area = #{parameter.towerarea}
+		</if>
+		<if test="parameter.towerlevel != null and parameter.towerlevel != -1">
+			and a.Tower_level = #{parameter.towerlevel}
+		</if>
+		;
+	</select>
+
+
+</mapper>

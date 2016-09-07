@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tower.mapper.TxMapper">
+
+	<select id="getTxs" parameterType="com.tower.common.bean.TxPage"
+		resultType="com.tower.common.bean.TxRecord">
+		select * from (select *,ROW_NUMBER() OVER (ORDER BY adddate desc) as
+		rank from(
+		select
+		a.ID as id,
+		b.User_name as username,
+		b.User_tele as usertele,
+		d.area_name as areaname,
+		c.City_name as cityname,
+		(case b.user_level when 1 then '一级用户' when 2 then '二级用户' when 3 then '三级用户'
+		when 4 then '四级用户' end ) as levelname,
+		g.Type_name as typename,
+		a.Fee as fee,
+		 CONVERT(varchar,
+		a.Add_date, 120 ) as adddate,
+	  
+		(case a.state when 0 then '提现申请中' when 1 then '审核通过，待打款' when 2 then '审核驳回'
+		when 3 then '已打款' when 4 then '打款失败' when 5 then '用户已确认' when 6 then
+		'自动确认' end ) as statename,
+		a.state,
+		b.Wx_id as wxid
+		from tower_user_tx_record a,
+		tower_user_info b left join tower_user_type g on b.User_type = g.ID,
+		 tower_area d 
+		, tower_city c
+		where 1 = 1
+		<!-- admin -->
+		<if test="admincity!=null and admincity!=''">
+			and c.City_id=#{admincity}
+		</if>
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		<if test="adminareas!=null">
+			and b.User_area in(
+			<foreach collection="adminareas" item="area" separator=",">
+				#{area.id}
+			</foreach>
+			)
+		</if>
+		<!-- admin end -->
+
+		and a.Wx_id = b.Wx_id
+		and b.User_area = d.ID
+		and d.City_id = c.City_id
+		<if test="parameter.usertele!=null and parameter.usertele!='' ">
+			and b.User_tele=#{parameter.usertele}
+		</if>
+		<if test="parameter.username!=null and parameter.username!='' ">
+			and b.User_name=#{parameter.username}
+		</if>
+		<if test="parameter.usercity!=null and parameter.usercity!='' ">
+			and c.id=#{parameter.usercity}
+		</if>
+		<if test="parameter.userarea!=null and parameter.userarea!=0 ">
+			and b.User_area=#{parameter.userarea}
+		</if>
+		<if test="parameter.userlevel!=null and parameter.userlevel!=-1 ">
+			and b.user_level=#{parameter.userlevel}
+		</if>
+		<if test="parameter.usertype!=null and parameter.usertype!=-1 ">
+			and b.User_type=#{parameter.usertype}
+		</if>
+		<if test="parameter.state!=null and parameter.state!=-1 ">
+			and a.state=#{parameter.state}
+		</if>
+		) w1)as t where t.rank between #{pageno}*10-9 and #{pageno}*10;
+	</select>
+
+	<select id="getTxsCount" parameterType="com.tower.common.bean.TxPage"
+		resultType="int">
+		select count(1)
+			from tower_user_tx_record a,
+		tower_user_info b left join tower_user_type g on b.User_type = g.ID,
+		 tower_area d 
+		, tower_city c
+		where 1 = 1
+		<!-- admin -->
+		<if test="admincity!=null and admincity!=''">
+			and c.City_id=#{admincity}
+		</if>
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		<if test="adminareas!=null">
+			and b.User_area in(
+			<foreach collection="adminareas" item="area" separator=",">
+				#{area.id}
+			</foreach>
+			)
+		</if>
+		<!-- admin end -->
+
+		and a.Wx_id = b.Wx_id
+		and b.User_area = d.ID
+		and d.City_id = c.City_id
+		<if test="parameter.usertele!=null and parameter.usertele!='' ">
+			and b.User_tele=#{parameter.usertele}
+		</if>
+		<if test="parameter.username!=null and parameter.username!='' ">
+			and b.User_name=#{parameter.username}
+		</if>
+		<if test="parameter.usercity!=null and parameter.usercity!='' ">
+			and c.id=#{parameter.usercity}
+		</if>
+		<if test="parameter.userarea!=null and parameter.userarea!=0 ">
+			and b.User_area=#{parameter.userarea}
+		</if>
+		<if test="parameter.userlevel!=null and parameter.userlevel!=-1 ">
+			and b.user_level=#{parameter.userlevel}
+		</if>
+		<if test="parameter.usertype!=null and parameter.usertype!=-1 ">
+			and b.User_type=#{parameter.usertype}
+		</if>
+		<if test="parameter.state!=null and parameter.state!=-1 ">
+			and a.state=#{parameter.state}
+		</if>
+		;
+	</select>
+
+	<select id="getTx" parameterType="String"
+		resultType="com.tower.common.bean.TxRecord">
+		select
+		b.User_name as username,
+		b.User_tele as usertele,
+		c.area_name as areaname,
+		d.City_name as cityname,
+		(case b.user_level when 1 then '一级用户' when 2 then '二级用户' when 3 then '三级用户'
+		when 4 then '四级用户' end ) as levelname,
+		g.Type_name as typename,
+		b.User_company as usercompany,
+		a.Tx_id as txid,
+		f.Charge as charge,
+		f.Getting_now as gettingnow,
+		f.Get_now as getnow,
+		f.All_geting as allgeting,
+		e.Bank_account as bankaccount,
+		e.Bank_name as bankname,
+		e.Bank_open as bankopen,
+		e.Bank_cardid as bankcardid,
+		a.Fee as fee,
+		a.state as state,
+		(case a.state when 0 then '提现申请中' when 1 then '审核通过，待打款' when 2 then '审核驳回'
+		when 3 then '已打款' when 4 then '打款失败' when 5 then '用户已确认' when 6 then
+		'自动确认' end ) as statename,
+		a.Add_date as adddate,
+		a.state as state,
+		a.Bz as bz,
+		b.Wx_id as wxid
+		from tower_user_tx_record a,
+		tower_user_info b left join tower_user_type g on b.User_type = g.ID,
+		tower_area c,
+		tower_city d,
+		tower_user_bank e,
+		tower_user_charge f
+		where a.Wx_id = b.Wx_id
+		and b.User_area = c.ID
+		and d.City_id = c.City_id
+		and a.Card_id = e.id
+		and a.Wx_id = f.Wx_id
+		and a.ID =#{txid};
+	</select>
+
+	<select id="getTxSources" parameterType="String"
+		resultType="com.tower.common.bean.TxSource">
+		select
+	    f.id as orderidid,
+		f.Order_id as orderid,
+		e.Tower_id as towerid,
+		e.Tower_name as towername,
+		c.area_name as areaname,
+		d.City_name as cityname,
+		a.Fee as fee,
+		(case a.Fee_type when 0 then '预付款' when 1 then '尾款' end ) as feetypename,
+		a.Pay_time as paytime
+		from tower_user_tx_source a,
+		tower_user_info b,
+		tower_area c,
+		tower_city d,
+		tower_tower_info e,
+		tower_order_detail f
+		where a.Wx_id = b.Wx_id
+		and e.tower_area = c.ID
+		and d.City_id = c.City_id
+		and a.Order_id = f.ID
+		and f.Tower_id = e.ID
+		and a.Tx_id = #{txid};
+	</select>
+
+	<select id="getTxDoinfos" parameterType="String"
+		resultType="com.tower.common.bean.TxDoinfo">
+		select
+		Do_user_name as dousername,
+		Do_user_tele as dousertele,
+		(case User_type when 0 then '用户' when 1 then '管理员' end ) as usertypename,
+		(case Now_state when 0 then '提现申请中' when 1 then '审核通过，待打款' when 2 then
+		'审核驳回' when 3 then '已打款' when 4 then '打款失败' when 5 then '用户已确认' when 6
+		then '自动确认' end) as nowstatename,
+		Do_date as dodate,
+		Sh_info as shinfo
+		from tower_user_tx_doinfo
+		where Tx_id = #{txid};
+	</select>
+
+	<update id="doinfo" parameterType="map">
+		update tower_user_tx_record
+		set state = #{state}
+		where Tx_id = #{txid};
+	</update>
+
+	<insert id="addTxdoinfo" parameterType="com.tower.common.bean.TxDoinfo">
+		insert into
+		tower_user_tx_doinfo
+		(Tx_id,Do_user_id,Do_user_name,Do_user_tele,User_type,Now_state,Do_date,Sh_info,Bz)
+		values(#{txid},#{douserid},#{dousername},#{dousertele},#{usertype},#{nowstate},GETDATE(),#{shinfo},#{bz});
+	</insert>
+
+	<update id="shnocharge" parameterType="map">
+		update tower_user_charge
+		set Charge = Charge+#{fee},
+		Get_now=get_now+#{fee},
+		Getting_now=Getting_now-#{fee}
+		where Wx_id in (select Wx_id from tower_user_tx_record where Tx_id=
+		#{txid});
+	</update>
+
+	<update id="shnotxsource" parameterType="map">
+		update
+		tower_user_tx_source
+		set Tx_id = ''
+		where Tx_id = (select ID from tower_user_tx_record where Tx_ID = #{txid});
+	</update>
+
+	<update id="dkyescharge" parameterType="map">
+		update tower_user_charge
+		set Getting_now = Getting_now-#{fee},
+		all_geting=all_geting+#{fee}
+		where Wx_id in (select Wx_id from tower_user_tx_record where Tx_id=
+		#{txid});
+	</update>
+
+	<update id="dkdoinfo" parameterType="map">
+		update tower_user_tx_record
+		set state = #{state},
+		bank_back_id= #{bankbackid} ,
+		Complete_date=GETDATE()
+		where Tx_id = #{txid};
+	</update>
+
+
+
+	<select id="getDcTxs" parameterType="com.tower.common.bean.TxPage"
+		resultType="map">
+
+		select
+		b.User_name as username,
+		b.User_tele as usertele,
+		c.City_name as cityname,
+		m.area_name as areaname,
+		(case b.user_level when 1 then '一级用户' when 2 then '二级用户' when 3 then '三级用户'
+		when 4 then '四级用户' end ) as levelname,
+		g.Type_name as typename,
+		b.User_company as usercompany,
+		a.Tx_id as txid,
+		f.Charge as charge,
+		f.Getting_now as gettingnow,
+		f.Get_now as getnow,
+		f.All_geting as allgeting,
+		a.bank_back_id as bankbackid,
+		a.Bank_account as bankaccount,
+		a.Bank_name as bankname,
+		a.Bank_open as bankopen,
+		a.Bank_cardid as bankcardid,
+		a.Fee as fee,
+		a.state as state,
+		(case a.state when 0 then '提现申请中' when 1 then '审核通过，待打款' when 2 then '审核驳回'
+		when 3 then '已打款' when 4 then '打款失败' when 5 then '用户已确认' when 6 then
+		'自动确认' end ) as statename,
+		 CONVERT(varchar,
+		a.Add_date, 120 ) as adddate,
+		a.state as state,
+		a.Bz as bz
+		from tower_user_tx_record a 
+		left join tower_user_info b  on a.Wx_id = b.Wx_id
+		left join tower_user_type g on b.User_type = g.ID
+		left join tower_area m on m.ID=b.User_area
+		left join tower_city c on c.City_id=m.City_id
+	
+		left join tower_user_charge f on f.Wx_id=b.Wx_id
+        where 1=1
+		<!-- admin -->
+		<if test="adminCitys!=null">
+			and c.ID in(
+			<foreach collection="adminCitys" item="city" separator=",">
+				#{city.id}
+			</foreach>
+			)
+		</if>
+		<if test="adminareas!=null">
+			and b.User_area in(
+			<foreach collection="adminareas" item="area" separator=",">
+				#{area.id}
+			</foreach>
+			)
+		</if>
+		<!-- admin end -->
+
+		
+		<if test="parameter.usertele!=null and parameter.usertele!='' ">
+			and b.User_tele=#{parameter.usertele}
+		</if>
+		<if test="parameter.username!=null and parameter.username!='' ">
+			and b.User_name=#{parameter.username}
+		</if>
+		<if test="parameter.usercity!=null and parameter.usercity!=0 ">
+			and c.ID=#{parameter.usercity}
+		</if>
+		<if test="parameter.userarea!=null and parameter.userarea!=0 ">
+			and b.User_area=#{parameter.userarea}
+		</if>
+		<if test="parameter.userlevel!=null and parameter.userlevel!=-1 ">
+			and b.user_level=#{parameter.userlevel}
+		</if>
+		<if test="parameter.usertype!=null and parameter.usertype!=-1 ">
+			and b.User_type=#{parameter.usertype}
+		</if>
+		<if test="parameter.state!=null and parameter.state!=-1 ">
+			and a.state=#{parameter.state}
+		</if>
+		order by a.Add_date desc
+
+
+
+	</select>
+
+	<select id="getTxRecord" parameterType="String"
+		resultType="com.tower.common.bean.TxRecord">
+		select
+		e.Bank_cardid as bankcardid,
+		a.Fee as fee,
+		a.Wx_id as wxid
+		from tower_user_tx_record a
+		left join tower_user_bank e on
+		e.id=a.Card_id
+		where 1=1
+		and a.Tx_id =#{txid};
+	</select>
+
+
+</mapper>
